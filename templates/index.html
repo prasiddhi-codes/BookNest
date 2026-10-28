@@ -1,0 +1,265 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookNest | Find Your Next Read</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    
+<nav class="navbar">
+    <div class="logo">🍒 BookNest</div>
+
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="#explore">Explore</a>
+
+        {% if session.get('user_id') %}
+            <div class="profile-menu">
+                <button type="button"
+                        class="profile-button"
+                        id="profileButton"
+                        aria-expanded="false"
+                        aria-label="Open profile menu">
+                    <span class="profile-avatar">
+                        {{ session.get('username', 'U')[0]|upper }}
+                    </span>
+                </button>
+
+                <div class="profile-dropdown" id="profileDropdown" hidden>
+                    <p class="profile-greeting">
+                        Hi, {{ session.get('username') }}! 
+                    </p>
+                    <a href="/register">Create New Account</a>
+                    <a href="/logout">Log Out</a>
+                    <div class="dropdown-divider"></div>
+                    <a href="/delete-account" class="delete-account-link">
+                        Delete Account
+                    </a>
+                </div>
+            </div>
+        {% else %}
+            <a href="/register">Sign Up</a>
+            <a href="/login">Log In</a>
+        {% endif %}
+    </div>
+</nav>
+
+
+    <header class="hero">
+        <p class="tagline">YOUR NEXT CHAPTER STARTS HERE</p>
+        <h1>Find books that feel like <span>you.</span></h1>
+        
+{% if session.get('user_id') %}
+    <p class="welcome-message">
+        Welcome back, {{ session.get('username') }}! 💗
+    </p>
+{% endif %}
+
+        <p class="hero-text">
+            Discover stories you'll fall in love with.
+            Your next favourite book is waiting.
+        </p>
+        <a href="#explore" class="explore-btn">Explore Books →</a>
+    </header>
+
+    
+<section id="explore" class="explore-section">
+    <p class="tagline">A WORLD OF STORIES</p>
+    <h2>Find Your Next Read</h2>
+    
+<div class="search-area">
+    
+<form action="/" method="GET" class="search-box">
+    <input
+        type="text"
+        name="q"
+        placeholder="Search books or authors..."
+        value="{{ query }}"
+    >
+    <button type="submit">Search</button>
+    
+</form>
+
+
+    <select id="genreFilter" onchange="filterByGenre(this.value)">
+    <option value="all" {% if not request.args.get('genre') %}selected{% endif %}>All Genres</option>
+    <option value="romance" {% if request.args.get('genre') == 'romance' %}selected{% endif %}>Romance</option>
+    <option value="fantasy" {% if request.args.get('genre') == 'fantasy' %}selected{% endif %}>Fantasy</option>
+    <option value="romantasy" {% if request.args.get('genre') == 'romantasy' %}selected{% endif %}>Romantasy</option>
+    <option value="science fiction" {% if request.args.get('genre') == 'science fiction' %}selected{% endif %}>Science Fiction</option>
+    <option value="mystery" {% if request.args.get('genre') == 'mystery' %}selected{% endif %}>Mystery</option>
+    <option value="thriller" {% if request.args.get('genre') == 'thriller' %}selected{% endif %}>Thriller</option>
+    <option value="horror" {% if request.args.get('genre') == 'horror' %}selected{% endif %}>Horror</option>
+    <option value="contemporary" {% if request.args.get('genre') == 'contemporary' %}selected{% endif %}>Contemporary</option>
+    <option value="young adult" {% if request.args.get('genre') == 'young adult' %}selected{% endif %}>Young Adult</option>
+    <option value="classics" {% if request.args.get('genre') == 'classics' %}selected{% endif %}>Classics</option>
+    <option value="fiction" {% if request.args.get('genre') == 'fiction' %}selected{% endif %}>Fiction</option>
+    <option value="historical fiction" {% if request.args.get('genre') == 'historical fiction' %}selected{% endif %}>Historical Fiction</option>
+    <option value="nonfiction" {% if request.args.get('genre') == 'nonfiction' %}selected{% endif %}>Nonfiction</option>
+    <option value="biography" {% if request.args.get('genre') == 'biography' %}selected{% endif %}>Biography</option>
+    <option value="poetry" {% if request.args.get('genre') == 'poetry' %}selected{% endif %}>Poetry</option>
+    <option value="dark_romance" {% if request.args.get('genre') == 'dark_romance' %}selected{% endif %}>Dark Romance</option>
+    <option value="dystopian" {% if request.args.get('genre') == 'dystopian' %}selected{% endif %}>Dystopian</option>
+</select>
+</div>
+
+    <p class="section-description">
+        A few stories to steal your heart.
+    </p>
+
+    
+
+{% set rating_message = session.pop('rating_message', None) %}
+{% if rating_message %}
+    <p class="rating-success">
+        {{ rating_message }}
+    </p>
+{% endif %}
+
+
+
+<div class="book-container" id="books">
+    {% if books %}
+        {% for book in books %}
+        <div class="book-card">
+            <div class="book-cover {% if not book.cover %}cover-one{% endif %}">
+                {% if book.cover %}
+                    <img src="{{ book.cover }}" alt="{{ book.title }} book cover">
+                {% else %}
+                    <span>{{ book.title }}</span>
+                {% endif %}
+            </div>
+
+            <div class="book-info">
+                <h3>{{ book.title }}</h3>
+                <p class="author">{{ book.author }}</p>
+                <p class="genre">{{ book.genre }}</p>
+                <p class="rating">★ {{ book.rating }}{% if book.rating != "Not available" %}   {% endif %}</p>
+
+                {% if book.your_rating %}
+    <p class="your-saved-rating">
+        Your saved rating: {{ "★" * book.your_rating }}{{ "☆" * (5 - book.your_rating) }}
+    </p>
+{% endif %}
+                
+{% if session.get('user_id') and book.book_key %}
+    <form action="/rate" method="POST" class="rating-form">
+        <input type="hidden" name="book_key" value="{{ book.book_key }}">
+        <input type="hidden" name="book_title" value="{{ book.title }}">
+        <input type="hidden" name="genre" value="{{ request.args.get('genre', '') }}">
+
+        <label for="rating-{{ loop.index }}">Your rating:</label>
+<select name="rating" id="rating-{{ loop.index }}" required>
+    <option value="">Choose stars</option>
+    {% for star in range(1, 6) %}
+        <option value="{{ star }}"
+            {% if book.your_rating == star %}selected{% endif %}>
+            ★ {{ star }}
+        </option>
+    {% endfor %}
+</select>
+
+        <button type="submit">Save Rating</button>
+    </form>
+{% elif not session.get('user_id') %}
+    <p><a href="/login">Log in to rate this book</a></p>
+{% endif %}
+
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        {% if query %}
+            <p>No books found. Try another search!</p>
+        {% else %}
+            <div class="book-card">
+                <div class="book-cover cover-one"><span>THE<br>LOVE<br>HYPOTHESIS</span></div>
+                <div class="book-info">
+                    <h3>The Love Hypothesis</h3>
+                    <p class="author">Ali Hazelwood</p>
+                    <p class="genre">Romance</p>
+                    <p class="rating">★ 4.5 / 5</p>
+                </div>
+            </div>
+
+            <div class="book-card">
+                <div class="book-cover cover-two"><span>THE<br>INVISIBLE<br>LIFE</span></div>
+                <div class="book-info">
+                    <h3>The Invisible Life of Addie LaRue</h3>
+                    <p class="author">V. E. Schwab</p>
+                    <p class="genre">Fantasy</p>
+                    <p class="rating">★ 4.4 / 5</p>
+                </div>
+            </div>
+
+            <div class="book-card">
+                <div class="book-cover cover-three"><span>IT ENDS<br>WITH US</span></div>
+                <div class="book-info">
+                    <h3>It Ends with Us</h3>
+                    <p class="author">Colleen Hoover</p>
+                    <p class="genre">Contemporary Romance</p>
+                    <p class="rating">★ 4.2 / 5</p>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+</div>
+
+</section>
+
+
+    <footer>
+        <p>Made with ♥ for book lovers.</p>
+    </footer>
+
+    
+
+
+<script>
+    
+
+function filterByGenre(genre) {
+    if (genre.toLowerCase() === "all") {
+        window.location.replace("/");
+    } else {
+        window.location.href = "/?genre=" + encodeURIComponent(genre) + "#books";
+    }
+}
+
+
+const profileButton = document.getElementById("profileButton");
+const profileDropdown = document.getElementById("profileDropdown");
+
+if (profileButton && profileDropdown) {
+    profileButton.addEventListener("click", function () {
+        const isOpen = !profileDropdown.hidden;
+        profileDropdown.hidden = isOpen;
+        profileButton.setAttribute("aria-expanded", String(!isOpen));
+    });
+
+    document.addEventListener("click", function (event) {
+        if (!event.target.closest(".profile-menu")) {
+            profileDropdown.hidden = true;
+            profileButton.setAttribute("aria-expanded", "false");
+        }
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            profileDropdown.hidden = true;
+            profileButton.setAttribute("aria-expanded", "false");
+        }
+    });
+}
+
+
+</script>
+
+
+</body>
+</html>

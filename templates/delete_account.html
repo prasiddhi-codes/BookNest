@@ -1,0 +1,50 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Account | BookNest</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="delete-page">
+
+    <nav class="navbar">
+        <div class="logo">🍒 BookNest</div>
+        <a href="/">Back to Home</a>
+    </nav>
+
+    <main class="delete-container">
+        <div class="delete-card">
+            <div class="delete-icon"></div>
+
+            <p class="delete-tagline">BEFORE YOU TURN THE LAST PAGE</p>
+
+            <h1>Leaving BookNest?</h1>
+
+            <p class="delete-message">
+                Are you sure you want to delete your account?
+                We'd hate to see you go, but the choice is yours.
+            </p>
+
+            <div class="delete-warning">
+                <strong>Please keep in mind</strong>
+                <p>Your account and all your book ratings will be permanently deleted. This action cannot be undone.</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('delete_account') }}">
+                <button type="submit" class="confirm-delete-button">
+                    Yes, Delete My Account
+                </button>
+            </form>
+
+            <a href="/" class="cancel-delete-link">
+                No, I'll stay and read 💗
+            </a>
+        </div>
+    </main>
+
+</body>
+</html>
+
